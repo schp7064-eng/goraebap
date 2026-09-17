@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>고래밥 바다생물 탐구</title>
+<style>
+  :root{
+    --bg1:#dff6ff; --bg2:#8fd3ff; --sea:#2b9ee8; --deep:#0c6fb8;
+    --card:#ffffff; --text:#17324d; --yellow:#ffe269; --shadow:0 10px 30px rgba(13,78,121,.18);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:"Arial","Pretendard",sans-serif; color:var(--text);
+    background:linear-gradient(var(--bg1), var(--bg2));
+    min-height:100vh;
+  }
+  header{
+    text-align:center; padding:34px 20px 18px;
+  }
+  h1{margin:0; font-size:clamp(28px,5vw,52px); color:#075f9f}
+  header p{font-size:18px; margin:10px 0 0}
+  .hint{
+    display:inline-block; margin-top:12px; padding:8px 14px; border-radius:999px;
+    background:#fff7c5; font-weight:700;
+  }
+  .grid{
+    width:min(1180px,92%); margin:20px auto 60px;
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:18px;
+  }
+  .animal{
+    border:0; background:rgba(255,255,255,.92); border-radius:24px; padding:12px;
+    min-height:190px; cursor:pointer; box-shadow:var(--shadow); transition:.2s transform,.2s box-shadow;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+  }
+  .animal:hover,.animal:focus{transform:translateY(-6px) scale(1.02); box-shadow:0 16px 36px rgba(13,78,121,.25)}
+  .thumb-wrap{width:100%;height:112px;border-radius:17px;overflow:hidden;background:#dff4ff;display:flex;align-items:center;justify-content:center}
+  .thumb{width:100%;height:100%;object-fit:cover;display:block}
+  .thumb-fallback{font-size:58px;display:none}
+  .animal strong{font-size:21px; margin-top:12px}
+  .animal small{font-size:13px; color:#5b7890; margin-top:5px}
+  .bubble{position:fixed;border-radius:50%;background:rgba(255,255,255,.35);pointer-events:none}
+  .b1{width:55px;height:55px;left:5%;bottom:8%}.b2{width:28px;height:28px;left:13%;bottom:22%}
+  .b3{width:70px;height:70px;right:8%;bottom:14%}.b4{width:34px;height:34px;right:15%;bottom:31%}
+
+  dialog{
+    width:min(920px,94vw); border:0; border-radius:30px; padding:0; box-shadow:0 30px 80px rgba(0,0,0,.3);
+  }
+  dialog::backdrop{background:rgba(0,44,76,.6); backdrop-filter:blur(3px)}
+  .modal{background:white; overflow:hidden; border-radius:30px}
+  .modal-top{
+    padding:24px 26px; display:flex; justify-content:space-between; align-items:center;
+    background:linear-gradient(135deg,#0d85cf,#55c8f4); color:white;
+  }
+  .title-wrap{display:flex;gap:16px;align-items:center}
+  .bigemoji{font-size:58px}
+  .modal h2{margin:0;font-size:34px}
+  .nickname{opacity:.9;margin-top:4px;font-weight:700}
+  .close{
+    width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.2);
+    color:white;font-size:24px;cursor:pointer
+  }
+  .content{display:grid;grid-template-columns:1.05fr 1fr;gap:22px;padding:25px}
+  .photo{
+    min-height:330px;border-radius:24px;overflow:hidden;background:#e6f7ff;
+    position:relative; display:flex;align-items:center;justify-content:center
+  }
+  .photo img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+  .photo-fallback{font-size:110px}
+  .facts{display:grid;gap:12px}
+  .fact{background:#f4fbff;border-radius:18px;padding:15px 17px;border-left:6px solid #4db8ed}
+  .fact h3{margin:0 0 6px;font-size:18px}
+  .fact p{margin:0;line-height:1.55;font-size:16px}
+  .source{font-size:12px;color:#6f8797;padding:0 25px 22px;text-align:right}
+  @media(max-width:720px){
+    .content{grid-template-columns:1fr}
+    .photo{min-height:250px}
+    .grid{grid-template-columns:repeat(2,1fr)}
+    .animal{min-height:145px}
+  }
+
+
+  .learn-wrap{
+    width:min(1180px,92%);margin:10px auto 28px;
+    background:rgba(255,255,255,.95);border-radius:28px;padding:24px;
+    box-shadow:var(--shadow);
+  }
+  .learn-wrap h2{margin:0 0 8px;color:#075f9f;text-align:center;font-size:28px}
+  .learn-sub{text-align:center;margin:0 0 20px;color:#52718a;font-size:16px}
+  .learn-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .learn-card{background:#f7fcff;border-radius:22px;padding:20px;border:2px solid #d7eefb}
+  .learn-card h3{margin:0 0 8px;font-size:22px;color:#125f91}
+  .learn-card p{margin:0 0 16px;line-height:1.6}
+  .chain{
+    display:flex;align-items:center;justify-content:center;flex-wrap:wrap;
+    gap:10px;padding:15px 8px;background:white;border-radius:18px;
+  }
+  .chain-node{
+    min-width:92px;padding:12px 10px;border-radius:16px;background:#eef9ff;
+    text-align:center;font-weight:800;font-size:16px;
+  }
+  .chain-node .ce{font-size:36px;display:block;margin-bottom:4px}
+  .arrow{font-size:28px;font-weight:900;color:#1688c7}
+  .arrow-note{text-align:center;font-size:13px;color:#607b8c;margin-top:9px}
+  .web-demo{
+    position:relative;min-height:285px;background:white;border-radius:18px;padding:15px;
+  }
+  .web-node{
+    position:absolute;min-width:84px;padding:9px 8px;border-radius:14px;
+    background:#eef9ff;text-align:center;font-weight:800;font-size:14px;
+    border:2px solid #bfe4f7;z-index:2;
+  }
+  .web-node .ce{font-size:28px;display:block}
+  .web-line{
+    position:absolute;height:3px;background:#48a9db;transform-origin:left center;z-index:1;
+  }
+  .web-line::after{
+    content:"";position:absolute;right:-2px;top:-4px;
+    border-left:9px solid #48a9db;border-top:5px solid transparent;border-bottom:5px solid transparent;
+  }
+  .mini-check{
+    margin-top:16px;padding:14px;border-radius:16px;background:#fff8dc;font-weight:700;line-height:1.6;
+  }
+  .start-title{
+    width:min(1180px,92%);margin:8px auto 8px;text-align:center;
+    font-size:25px;color:#075f9f;font-weight:900;
+  }
+  @media(max-width:760px){
+    .learn-grid{grid-template-columns:1fr}
+    .web-demo{min-height:300px}
+  }
+
+.quiz-btn{width:100%;border:0;border-radius:16px;padding:13px;background:#075f9f;color:white;font-weight:800;font-size:17px;cursor:pointer}.quiz-area{display:none;margin-top:12px;background:#f7fcff;border:2px solid #d7eefb;border-radius:18px;padding:16px}.qbox{margin:12px 0;padding:12px;background:white;border-radius:14px}.qbox p{font-weight:800}.qbox label{display:block;padding:7px}.quiz-submit{border:0;border-radius:14px;padding:11px 15px;background:#f0b429;font-weight:900;cursor:pointer}.quiz-result{margin-top:12px;font-weight:900}.acquired{display:none;margin-top:12px;padding:14px;border-radius:16px;background:#e9f9ee;text-align:center;font-weight:900;font-size:18px}.animal.got{outline:4px solid #ffd54f;position:relative}.animal.got::after{content:"획득!";position:absolute;right:8px;top:8px;background:#ffd54f;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:900}</style>
+</head>
+<body>
+<header>
+  <h1>🐳 고래밥 바다생물 탐구</h1>
+  <p>고래밥 속 바다 생물의 실제 사진을 보고, 눌러서 생물의 특징을 알아보세요!</p>
+  <div class="hint">총 16가지 바다 친구 🐚 · 사진 링크 점검판</div>
+</header>
+
+
+
+
+<div id="collectionProgress" style="width:min(1180px,92%);margin:0 auto 22px;background:white;border-radius:18px;padding:12px 16px;text-align:center;font-weight:900;box-shadow:var(--shadow)">🏆 나의 바다생물 도감 <span id="gotCount">0</span>/16</div><main class="grid" id="grid"></main>
+
+
+<div class="bubble b1"></div><div class="bubble b2"></div><div class="bubble b3"></div><div class="bubble b4"></div>
+
+<dialog id="detail">
+  <div class="modal">
+    <div class="modal-top">
+      <div class="title-wrap">
+        <div class="bigemoji" id="mEmoji"></div>
+        <div><h2 id="mName"></h2><div class="nickname" id="mNick"></div></div>
+      </div>
+      <button class="close" onclick="detail.close()" aria-label="닫기">✕</button>
+    </div>
+    <div class="content">
+      <div class="photo">
+        <img id="mImg" alt="" onerror="this.style.display='none'">
+        <div class="photo-fallback" id="mFallback"></div>
+      </div>
+      <div class="facts">
+        <div class="fact"><h3>🍽️ 먹이</h3><p id="mFood"></p></div>
+        <div class="fact"><h3>🦈 천적</h3><p id="mEnemy"></p></div>
+        <div class="fact"><h3>🌊 살아가는 환경</h3><p id="mHabitat"></p></div>
+        <div class="fact"><h3>🔎 특징</h3><p id="mFeature"></p></div>
+        <div class="fact"><h3>✨ 재미있는 사실</h3><p id="mFun"></p></div>      </div>
+    </div>
+
+    <div style="padding:0 25px 20px">
+      <button class="quiz-btn" id="quizBtn" type="button">🎯 퀴즈 3문제 도전하기</button>
+      <div class="quiz-area" id="quizArea">
+        <h3 id="quizTitle" style="margin:0 0 12px;color:#075f9f"></h3>
+        <form id="quizForm"></form>
+        <button class="quiz-submit" id="quizSubmit" type="button">정답 확인</button>
+        <div class="quiz-result" id="quizResult"></div>
+        <div class="acquired" id="acquiredBox"></div>
+      </div>
+    </div>
+    <div class="source">사진은 공개된 Wikimedia Commons 자료를 중심으로 활용합니다. 이미지가 보이지 않을 경우 이모지로 대체됩니다.</div>
+  </div>
+</dialog>
+
+<script>
+const animals = [
+ {name:"고래", nick:"라두", emoji:"🐋", img:"https://upload.wikimedia.org/wikipedia/commons/6/61/Humpback_Whale_underwater_shot.jpg",
+ food:"크릴, 새우, 오징어, 멸치 같은 작은 물고기를 먹어요. 특히 새우와 오징어는 다른 여러 바다 생물의 먹이도 되기 때문에 먹이그물에서 여러 생물과 연결돼요.",
+ enemy:"성체는 천적이 많지 않지만, 어린 고래는 범고래 등의 공격을 받을 수 있어요.",
+ habitat:"전 세계의 바다에 살며, 어떤 종은 계절에 따라 아주 먼 거리를 이동해요.",
+ feature:"물고기가 아니라 폐로 숨을 쉬는 포유류예요. 수면 위로 올라와 숨을 쉬어야 해요.",
+ fun:"고래는 소리를 이용해 서로 의사소통하기도 해요."},
+ {name:"오징어", nick:"징어징가", emoji:"🦑", img:"https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Sepioteuthis_sepioidea_%28Caribbean_Reef_Squid%29.jpg/960px-Sepioteuthis_sepioidea_%28Caribbean_Reef_Squid%29.jpg",
+ food:"새우, 멸치 같은 작은 물고기를 먹어요. 반대로 오징어는 다랑어, 돌고래, 상어, 망치상어의 먹이가 되기도 해요.",
+ enemy:"큰 물고기, 돌고래, 바닷새, 물개 등이 잡아먹어요.",
+ habitat:"연안부터 깊은 바다까지 매우 다양한 곳에서 살아요.",
+ feature:"몸 색깔을 빠르게 바꿀 수 있고, 위험하면 먹물을 뿜어요.",
+ fun:"오징어는 팔 8개와 더 긴 촉수 2개를 가지고 있어요."},
+ {name:"불가사리", nick:"스타피", emoji:"⭐", img:"https://upload.wikimedia.org/wikipedia/commons/f/f6/Pisaster_ochraceus_%283556514353%29.jpg",
+ food:"소라, 조개 같은 연체동물을 먹어요. 소라는 복어와 문어도 먹기 때문에 불가사리와 이 생물들은 같은 먹이를 두고 연결될 수 있어요.",
+ enemy:"큰 물고기, 게, 수달, 다른 불가사리 등이 천적이 될 수 있어요.",
+ habitat:"얕은 바다의 바위나 모래 바닥부터 깊은 바다까지 살아요.",
+ feature:"대부분 별처럼 여러 개의 팔을 가지고 있고, 관족을 이용해 움직여요.",
+ fun:"일부 불가사리는 팔이 손상돼도 다시 자라날 수 있어요."},
+ {name:"돌고래", nick:"엔돌핀", emoji:"🐬", img:"https://upload.wikimedia.org/wikipedia/commons/1/10/Tursiops_truncatus_01.jpg",
+ food:"오징어, 멸치 같은 물고기와 새우류를 먹어요. 오징어는 다랑어와 상어도 먹기 때문에 하나의 먹이가 여러 포식자와 연결돼요.",
+ enemy:"큰 상어와 범고래 등이 천적이 될 수 있어요.",
+ habitat:"따뜻한 연안부터 먼바다까지 여러 해역에서 살아요.",
+ feature:"폐로 숨 쉬는 포유류이며 무리를 이루어 생활하는 경우가 많아요.",
+ fun:"소리를 내고 되돌아오는 메아리를 이용해 주변을 파악할 수 있어요."},
+ {name:"꽃게", nick:"여보게", emoji:"🦀", img:"https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Portunus_trituberculatus_-_National_Museum_of_Nature_and_Science%2C_Tokyo_-_DSC06892.JPG/960px-Portunus_trituberculatus_-_National_Museum_of_Nature_and_Science%2C_Tokyo_-_DSC06892.JPG",
+ food:"새우, 소라, 작은 물고기 등을 먹어요. 반대로 꽃게는 문어의 먹이가 되기도 해요. 따라서 새우 → 꽃게 → 문어처럼 관계가 이어질 수 있어요.",
+ enemy:"문어, 큰 물고기, 바닷새 등이 잡아먹어요.",
+ habitat:"우리나라 연안의 모래나 진흙 바닥에서 흔히 살아요.",
+ feature:"마지막 다리가 넓고 납작해 헤엄치는 데 유리해요.",
+ fun:"성장하려면 단단한 껍데기를 벗는 탈피를 해야 해요."},
+ {name:"복어", nick:"요리보고", emoji:"🐡", img:"https://upload.wikimedia.org/wikipedia/commons/b/bd/%D0%90%D1%80%D0%BE%D1%82%D1%80%D0%BE%D0%BD_%D0%BA%D0%BE%D0%BB%D1%8E%D1%87%D0%B8%D0%B9_%28arothron_hispidus%29._%D0%A0%D1%8B%D0%B1%D0%B0-%D1%88%D0%B0%D1%80.Kugelfisch.IMG_4302BE.jpg",
+ food:"새우, 소라, 조개 등을 먹어요. 새우와 소라는 문어, 꽃게, 불가사리 등 다른 생물의 먹이도 되어 여러 먹이사슬을 서로 이어 줘요.",
+ enemy:"상어 같은 큰 포식자가 있지만, 몸을 부풀리고 독을 가진 종도 있어 공격하기 어려워요.",
+ habitat:"열대와 온대의 연안, 산호초, 모래 바닥 등에 살아요.",
+ feature:"위험할 때 물이나 공기를 삼켜 몸을 크게 부풀릴 수 있어요.",
+ fun:"일부 복어에는 매우 강한 독인 테트로도톡신이 있어요."},
+ {name:"거북이", nick:"메탈부기", emoji:"🐢", img:"https://upload.wikimedia.org/wikipedia/commons/6/6e/Chelonia_mydas_swimming%2C_Hawaii.jpg",
+ food:"종류에 따라 해파리, 해조류, 해면, 게 등을 먹어요. 특히 해파리 → 바다거북처럼 연결되며, 해파리는 플랑크톤과 작은 새우류를 먹어요.",
+ enemy:"어린 개체는 새와 큰 물고기에게 잡아먹히며, 성체는 큰 상어 등이 공격할 수 있어요.",
+ habitat:"따뜻한 바다를 중심으로 넓은 바다를 이동하며 살아요.",
+ feature:"바다거북은 지느러미처럼 생긴 앞다리로 헤엄쳐요.",
+ fun:"암컷은 알을 낳기 위해 자신이 태어난 해변 근처로 돌아오는 경우가 있어요."},
+ {name:"다랑어", nick:"따랑해", emoji:"🐟", img:"https://upload.wikimedia.org/wikipedia/commons/2/2b/Thunnus_thynnus_2.jpg",
+ food:"오징어, 새우, 멸치 같은 작은 물고기를 먹어요. 반대로 다랑어는 상어와 망치상어의 먹이가 되기도 해요. 그래서 먹이 관계가 여러 단계로 이어져요.",
+ enemy:"큰 상어, 범고래 등이 천적이 될 수 있어요.",
+ habitat:"넓은 외양을 빠르게 이동하며 살아가요.",
+ feature:"유선형 몸과 강한 근육으로 매우 빠르게 헤엄칠 수 있어요.",
+ fun:"일부 다랑어는 주변 바닷물보다 몸의 일부 온도를 높게 유지할 수 있어요."},
+ {name:"상어", nick:"후크", emoji:"🦈", img:"https://upload.wikimedia.org/wikipedia/commons/5/56/White_shark.jpg",
+ food:"오징어, 문어, 다랑어와 여러 물고기를 먹어요. 오징어·문어·다랑어도 각각 다른 생물을 먹기 때문에 상어를 중심으로 여러 먹이사슬이 연결될 수 있어요.",
+ enemy:"큰 상어와 범고래 등이 천적이 될 수 있어요.",
+ habitat:"얕은 연안부터 깊은 바다까지 전 세계 바다에 살아요.",
+ feature:"뼈가 단단한 뼈가 아니라 연골로 이루어진 물고기예요.",
+ fun:"상어의 이빨은 빠지더라도 뒤쪽에서 새 이빨이 계속 나오는 종이 많아요."},
+ {name:"문어", nick:"문어크", emoji:"🐙", img:"https://upload.wikimedia.org/wikipedia/commons/5/57/Octopus2.jpg",
+ food:"꽃게, 새우, 소라, 조개와 작은 물고기를 먹어요. 반대로 문어는 상어와 망치상어의 먹이가 되기도 해요. 여러 생물과 먹고 먹히는 관계를 맺어요.",
+ enemy:"상어, 큰 물고기, 곰치, 물개 등이 잡아먹어요.",
+ habitat:"바위 틈, 산호초, 해저 바닥 등 다양한 곳에 숨어 살아요.",
+ feature:"팔이 8개이고 몸이 부드러워 아주 좁은 틈도 통과할 수 있어요.",
+ fun:"피부 색과 무늬를 바꾸어 주변 환경에 숨는 능력이 뛰어나요."},
+ {name:"소라", nick:"나팔소라", emoji:"🐚", img:"https://upload.wikimedia.org/wikipedia/commons/1/1b/Horned_turban_snail.jpg",
+ food:"바위에 붙은 해조류와 작은 유기물을 먹어요. 반대로 소라는 불가사리, 문어, 복어, 가재의 먹이가 되기도 해 먹이그물의 여러 갈래를 이어 줘요.",
+ enemy:"문어, 불가사리, 게, 큰 물고기 등이 천적이에요.",
+ habitat:"얕은 바다의 바위가 많은 곳이나 해조류가 풍부한 곳에서 살아요.",
+ feature:"단단한 나선형 껍데기가 몸을 보호해 줘요.",
+ fun:"거친 혀처럼 생긴 치설을 이용해 바위 표면의 먹이를 긁어 먹어요."},
+ {name:"해파리", nick:"파리지앵", emoji:"🪼", img:"https://upload.wikimedia.org/wikipedia/commons/4/44/Jelly_cc11.jpg",
+ food:"동물성 플랑크톤, 작은 새우류, 물고기의 알과 작은 물고기를 먹어요. 반대로 해파리는 바다거북의 먹이가 되기도 해요.",
+ enemy:"바다거북, 개복치, 일부 물고기 등이 해파리를 먹어요.",
+ habitat:"연안과 먼바다 등 전 세계 바다에서 발견돼요.",
+ feature:"몸 대부분이 물이며 촉수의 자포를 이용해 먹이를 잡는 종류가 많아요.",
+ fun:"해파리는 뇌나 심장이 없지만 신경망을 이용해 자극에 반응해요."},
+ {name:"가재", nick:"집에가재", emoji:"🦞", img:"https://upload.wikimedia.org/wikipedia/commons/6/62/Blue-lobster.jpg",
+ food:"새우, 소라, 조개, 작은 물고기 등을 먹어요. 새우와 소라는 꽃게, 복어, 문어 같은 다른 생물도 먹기 때문에 여러 생물의 먹이 관계가 겹쳐요.",
+ enemy:"문어, 큰 물고기, 바다표범 등이 잡아먹을 수 있어요.",
+ habitat:"바위 틈이나 해저 바닥에 숨어 생활해요.",
+ feature:"크고 강한 집게발을 가진 종류가 많고 단단한 외골격으로 몸을 보호해요.",
+ fun:"성장하면서 낡은 껍데기를 벗고 더 큰 새 껍데기를 만들어요."},
+ {name:"새우", nick:"누구새우", emoji:"🦐", img:"https://upload.wikimedia.org/wikipedia/commons/a/a2/Palaemon_elegans1.jpg",
+ food:"플랑크톤, 해조류 조각과 아주 작은 생물을 먹어요. 반대로 새우는 오징어, 꽃게, 복어, 문어, 가재, 다랑어 등 여러 생물의 먹이가 되어 먹이그물에서 중요한 연결 역할을 해요.",
+ enemy:"물고기, 문어, 오징어, 바닷새 등 아주 많은 동물이 새우를 먹어요.",
+ habitat:"연안, 갯벌, 산호초, 깊은 바다 등 매우 다양한 곳에 살아요.",
+ feature:"몸이 여러 마디로 나뉘며 긴 더듬이를 가지고 있어요.",
+ fun:"위험할 때 배를 빠르게 굽혀 뒤쪽으로 튀듯 도망칠 수 있어요."},
+ {name:"흰동가리", nick:"아네모내", emoji:"🐠", img:"https://upload.wikimedia.org/wikipedia/commons/8/85/Amphiprion_ocellaris_%28Clown_anemonefish%29_Nemo.jpg",
+ food:"동물성 플랑크톤, 작은 새우류와 작은 갑각류를 먹어요. 플랑크톤과 작은 새우류는 해파리나 다른 물고기의 먹이도 되어 여러 생물과 관계가 이어져요.",
+ enemy:"큰 물고기 등이 천적이지만 말미잘 사이에 숨어 몸을 보호해요.",
+ habitat:"따뜻한 산호초 주변에서 말미잘과 함께 살아가요.",
+ feature:"몸을 보호하는 점액 덕분에 말미잘 촉수 사이에서 지낼 수 있어요.",
+ fun:"한 무리에서 가장 큰 개체가 암컷이며 상황에 따라 성이 바뀔 수 있어요."},
+ {name:"망치상어", nick:"송망치", emoji:"🦈", img:"https://upload.wikimedia.org/wikipedia/commons/b/bf/Scalloped_Hammerhead_Shark_Sphyrna_Lewini_%28226845659%29.jpeg",
+ food:"오징어, 문어, 다랑어와 여러 물고기·갑각류를 먹어요. 오징어·문어·다랑어가 또 다른 생물을 먹기 때문에 여러 먹이사슬이 망치상어까지 이어질 수 있어요.",
+ enemy:"큰 상어와 범고래 등이 천적이 될 수 있어요.",
+ habitat:"따뜻한 연안과 외양을 오가며 살아가는 종이 많아요.",
+ feature:"머리가 좌우로 넓게 펼쳐져 망치처럼 보여요. 넓은 머리는 감각 기관을 넓게 배치하는 데 도움을 줘요.",
+ fun:"일부 망치상어는 낮에 큰 무리를 이루어 헤엄치기도 해요."}
+];
+
+
+const quizzes={"고래": [["고래의 먹이로 알맞은 것은?", ["오징어와 새우", "해조류와 소라", "불가사리와 거북이", "상어와 망치상어"], 0], ["다음 중 고래에게 먹힐 수 있는 생물은?", ["오징어", "상어", "바다거북", "불가사리"], 0], ["다음 먹이 관계 중 알맞은 것은?", ["새우 → 고래", "고래 → 새우", "고래 → 상어", "불가사리 → 고래"], 0]], "오징어": [["오징어의 먹이로 알맞은 것은?", ["새우와 작은 물고기", "해조류와 소라", "상어와 고래", "불가사리와 거북이"], 0], ["오징어를 먹을 수 있는 생물은?", ["상어", "소라", "새우", "해조류"], 0], ["먹이가 되는 생물 → 먹는 생물 순서로 알맞은 것은?", ["새우 → 오징어", "오징어 → 새우", "상어 → 오징어", "고래 → 오징어"], 0]], "불가사리": [["불가사리가 먹는 생물은?", ["소라", "상어", "고래", "다랑어"], 0], ["소라와 불가사리의 먹이 관계는?", ["소라 → 불가사리", "불가사리 → 소라", "서로 먹지 않는다", "소라가 상어를 먹는다"], 0], ["불가사리가 먹을 수 있는 먹이로 알맞은 것은?", ["조개", "다랑어", "돌고래", "망치상어"], 0]], "돌고래": [["돌고래의 먹이로 알맞은 것은?", ["오징어와 물고기", "해조류와 소라", "불가사리와 해파리", "상어와 망치상어"], 0], ["돌고래가 먹을 수 있는 생물은?", ["오징어", "소라", "불가사리", "해조류"], 0], ["먹이가 되는 생물 → 먹는 생물 순서로 알맞은 것은?", ["오징어 → 돌고래", "돌고래 → 오징어", "상어 → 돌고래", "해조류 → 돌고래"], 0]], "꽃게": [["꽃게가 먹을 수 있는 생물은?", ["새우와 소라", "상어와 고래", "거북이와 돌고래", "망치상어와 다랑어"], 0], ["꽃게를 먹을 수 있는 생물은?", ["문어", "소라", "새우", "해조류"], 0], ["먹이가 되는 생물 → 먹는 생물 순서로 알맞은 것은?", ["새우 → 꽃게", "꽃게 → 새우", "문어 → 꽃게", "상어 → 꽃게"], 0]], "복어": [["복어가 먹는 먹이로 알맞은 것은?", ["새우와 소라", "상어와 고래", "해파리와 돌고래", "다랑어와 망치상어"], 0], ["다음 중 복어가 먹을 수 있는 생물은?", ["소라", "고래", "상어", "돌고래"], 0], ["먹이가 되는 생물 → 먹는 생물 순서로 알맞은 것은?", ["새우 → 복어", "복어 → 새우", "상어 → 복어", "고래 → 복어"], 0]], "거북이": [["바다거북이 먹을 수 있는 생물은?", ["해파리", "상어", "고래", "다랑어"], 0], ["해파리와 바다거북의 먹이 관계는?", ["해파리 → 바다거북", "바다거북 → 해파리", "서로 먹지 않는다", "해파리가 상어를 먹는다"], 0], ["바다거북의 먹이로 알맞은 것은?", ["해파리와 해초", "상어와 고래", "문어와 다랑어만", "망치상어와 돌고래"], 0]], "다랑어": [["다랑어의 먹이로 알맞은 것은?", ["오징어와 새우", "해조류와 소라", "상어와 고래", "거북이와 불가사리"], 0], ["다랑어를 먹을 수 있는 생물은?", ["상어", "새우", "소라", "해조류"], 0], ["먹이가 되는 생물 → 먹는 생물 순서로 알맞은 것은?", ["오징어 → 다랑어", "다랑어 → 오징어", "상어 → 다랑어", "고래 → 다랑어"], 0]], "상어": [["상어가 먹을 수 있는 생물은?", ["오징어와 문어", "해조류와 소라", "새우와 플랑크톤만", "불가사리와 해조류"], 0], ["다음 중 상어의 먹이가 될 수 있는 생물은?", ["다랑어", "해조류", "플랑크톤", "소라"], 0], ["먹이가 되는 생물 → 먹는 생물 순서로 알맞은 것은?", ["다랑어 → 상어", "상어 → 다랑어", "해조류 → 상어", "상어 → 해조류"], 0]], "문어": [["문어가 먹을 수 있는 생물은?", ["꽃게와 새우", "상어와 고래", "돌고래와 거북이", "망치상어와 다랑어"], 0], ["문어를 먹을 수 있는 생물은?", ["상어", "소라", "새우", "해조류"], 0], ["먹이가 되는 생물 → 먹는 생물 순서로 알맞은 것은?", ["꽃게 → 문어", "문어 → 꽃게", "상어 → 문어", "고래 → 문어"], 0]], "소라": [["소라가 주로 먹는 것은?", ["해조류", "상어", "다랑어", "돌고래"], 0], ["소라를 먹을 수 있는 생물은?", ["문어", "고래", "상어만", "돌고래"], 0], ["먹이가 되는 것 → 먹는 생물 순서로 알맞은 것은?", ["해조류 → 소라", "소라 → 해조류", "상어 → 소라", "고래 → 소라"], 0]], "해파리": [["해파리가 먹는 먹이로 알맞은 것은?", ["동물성 플랑크톤", "상어", "고래", "바다거북"], 0], ["해파리를 먹을 수 있는 생물은?", ["바다거북", "소라", "새우", "해조류"], 0], ["먹이가 되는 생물 → 먹는 생물 순서로 알맞은 것은?", ["해파리 → 바다거북", "바다거북 → 해파리", "상어 → 해파리", "소라 → 해파리"], 0]], "가재": [["가재가 먹을 수 있는 생물은?", ["새우와 소라", "상어와 고래", "거북이와 돌고래", "망치상어와 다랑어"], 0], ["다음 중 가재의 먹이가 될 수 있는 생물은?", ["새우", "상어", "고래", "돌고래"], 0], ["먹이가 되는 생물 → 먹는 생물 순서로 알맞은 것은?", ["소라 → 가재", "가재 → 소라", "상어 → 가재", "고래 → 가재"], 0]], "새우": [["새우가 먹는 먹이로 알맞은 것은?", ["플랑크톤과 해조류 조각", "상어와 고래", "다랑어와 돌고래", "거북이와 문어"], 0], ["새우를 먹을 수 있는 생물은?", ["오징어", "해조류", "플랑크톤", "소라"], 0], ["먹이가 되는 것 → 먹는 생물 순서로 알맞은 것은?", ["플랑크톤 → 새우", "새우 → 플랑크톤", "상어 → 새우", "고래 → 플랑크톤"], 0]], "흰동가리": [["흰동가리가 먹는 먹이로 알맞은 것은?", ["동물성 플랑크톤과 작은 새우류", "상어와 고래", "거북이와 돌고래", "다랑어와 망치상어"], 0], ["다음 중 흰동가리의 먹이가 될 수 있는 것은?", ["동물성 플랑크톤", "상어", "고래", "바다거북"], 0], ["먹이가 되는 것 → 먹는 생물 순서로 알맞은 것은?", ["플랑크톤 → 흰동가리", "흰동가리 → 플랑크톤", "상어 → 흰동가리", "고래 → 흰동가리"], 0]], "망치상어": [["망치상어가 먹을 수 있는 생물은?", ["오징어와 문어", "해조류와 소라", "플랑크톤과 해조류만", "불가사리와 해초만"], 0], ["다음 중 망치상어의 먹이가 될 수 있는 생물은?", ["다랑어", "해조류", "플랑크톤", "소라"], 0], ["먹이가 되는 생물 → 먹는 생물 순서로 알맞은 것은?", ["오징어 → 망치상어", "망치상어 → 오징어", "해조류 → 망치상어", "소라 → 망치상어"], 0]]};
+let currentAnimal=null; const acquiredAnimals=new Set();
+const detail=document.getElementById("detail");
+const mEmoji=document.getElementById("mEmoji"), mName=document.getElementById("mName"), mNick=document.getElementById("mNick");
+const mImg=document.getElementById("mImg"), mFallback=document.getElementById("mFallback");
+const mFood=document.getElementById("mFood"), mEnemy=document.getElementById("mEnemy"), mHabitat=document.getElementById("mHabitat"), mFeature=document.getElementById("mFeature"), mFun=document.getElementById("mFun");
+const quizBtn=document.getElementById("quizBtn"), quizArea=document.getElementById("quizArea"), quizTitle=document.getElementById("quizTitle");
+const quizForm=document.getElementById("quizForm"), quizSubmit=document.getElementById("quizSubmit"), quizResult=document.getElementById("quizResult"), acquiredBox=document.getElementById("acquiredBox");
+const grid = document.getElementById("grid");
+animals.forEach((a,i)=>{
+  const b=document.createElement("button");
+  b.className="animal"; b.dataset.name=a.name;
+  b.innerHTML=`<div class="thumb-wrap"><img class="thumb" src="${a.img}" alt="${a.name} 실제 사진" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="thumb-fallback">${a.emoji}</span></div><strong>${a.name}</strong><small>바다 생물 ${i+1}</small>`;
+  b.onclick=()=>showAnimal(a);
+  grid.appendChild(b);
+});
+
+function showAnimal(a){
+  currentAnimal=a.name; quizArea.style.display="none"; quizResult.textContent=""; acquiredBox.style.display="none";
+  quizBtn.textContent=acquiredAnimals.has(a.name)?"🏆 획득한 생물 · 다시 도전하기":"🎯 퀴즈 3문제 도전하기";
+  mEmoji.textContent=a.emoji; mName.textContent=a.name; mNick.textContent=`고래밥 캐릭터 이름: ${a.nick}`;
+  mFallback.textContent=a.emoji; mImg.src=a.img; mImg.alt=`${a.name} 실제 모습`;
+  mImg.style.display="block";
+  mFood.textContent=a.food; mEnemy.textContent=a.enemy; mHabitat.textContent=a.habitat;
+  mFeature.textContent=a.feature; mFun.textContent=a.fun;  detail.showModal();
+}
+detail.addEventListener("click",(e)=>{ if(e.target===detail) detail.close(); });
+
+
+quizBtn.addEventListener("click",()=>{
+  if(!currentAnimal)return;
+  quizArea.style.display="block"; quizTitle.textContent=currentAnimal+" 퀴즈 3문제";
+  quizResult.textContent=""; acquiredBox.style.display="none"; quizForm.innerHTML="";
+  quizzes[currentAnimal].forEach((q,i)=>{
+    const d=document.createElement("div"); d.className="qbox";
+    d.innerHTML=`<p>${i+1}. ${q[0]}</p>`+q[1].map((o,j)=>`<label><input type="radio" name="q${i}" value="${j}"> ${o}</label>`).join("");
+    quizForm.appendChild(d);
+  });
+});
+quizSubmit.addEventListener("click",()=>{
+  let score=0,answered=0;
+  quizzes[currentAnimal].forEach((q,i)=>{const x=quizForm.querySelector(`input[name="q${i}"]:checked`);if(x){answered++;if(+x.value===q[2])score++;}});
+  if(answered<3){quizResult.textContent="세 문제에 모두 답해 주세요!";return;}
+  if(score===3){
+    const wasNew=!acquiredAnimals.has(currentAnimal);
+    acquiredAnimals.add(currentAnimal);
+    if(wasNew) document.getElementById("gotCount").textContent=acquiredAnimals.size;
+    quizResult.textContent="🎉 3문제를 모두 맞혔어요!";
+    acquiredBox.textContent="🏆 "+currentAnimal+" 획득!"; acquiredBox.style.display="block";
+    quizBtn.textContent="🏆 획득한 생물 · 다시 도전하기";
+    const c=[...document.querySelectorAll(".animal")].find(x=>x.dataset.name===currentAnimal);if(c)c.classList.add("got");
+  }else quizResult.textContent=`3문제 중 ${score}문제를 맞혔어요. 설명을 다시 살펴보고 재도전해 보세요!`;
+});
+</script>
+</body>
+</html>
